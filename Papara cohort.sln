@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.10.35013.160
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Papara cohort", "Papara cohort\Papara cohort.csproj", "{519D90E9-0049-43D1-ABF9-E25F3E49319B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{519D90E9-0049-43D1-ABF9-E25F3E49319B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{519D90E9-0049-43D1-ABF9-E25F3E49319B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{519D90E9-0049-43D1-ABF9-E25F3E49319B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{519D90E9-0049-43D1-ABF9-E25F3E49319B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {87D2C466-429E-4E80-913D-E7DF1E483AC5}
+	EndGlobalSection
+EndGlobal
