@@ -45,7 +45,7 @@ namespace Papara_cohort.Controllers
             return Ok(new ApiResponse<List<Customer>>(results));
         }
 
-        [HttpGet("List")]
+        [HttpGet("ListByName")]
         public ActionResult<ApiResponse<List<Customer>>> List([FromQuery] string name = "")
         {
             var filteredList = list;
