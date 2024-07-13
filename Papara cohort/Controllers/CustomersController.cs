@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using System.Xml.Linq;
+using System.Collections.Generic;
 
 namespace Papara_cohort.Controllers
 {
@@ -7,26 +7,24 @@ namespace Papara_cohort.Controllers
     [ApiController]
     public class CustomersController : ControllerBase
     {
-        private List<Customer> list;
+        private readonly ICustomerService _customerService;
 
-        public CustomersController()
+        public CustomersController(ICustomerService customerService)
         {
-            list = new List<Customer>();
-            list.Add(new Customer() { Id = 1, Name = "Test1", Age = 24 });
-            list.Add(new Customer() { Id = 2, Name = "Test2", Age = 44 });
-            list.Add(new Customer() { Id = 3, Name = "ATest3", Age = 34 });
+            _customerService = customerService;
         }
 
         [HttpGet]
         public ActionResult<ApiResponse<List<Customer>>> Get()
         {
+            var list = _customerService.GetAll();
             return Ok(new ApiResponse<List<Customer>>(list));
         }
 
         [HttpGet("{id}")]
         public ActionResult<ApiResponse<Customer>> Get(int id)
         {
-            var item = list?.FirstOrDefault(x => x.Id == id);
+            var item = _customerService.GetById(id);
             if (item is null)
             {
                 return NotFound(new ApiResponse<Customer>("Item not found in system."));
@@ -37,7 +35,7 @@ namespace Papara_cohort.Controllers
         [HttpGet("ByNameQuery")]
         public ActionResult<ApiResponse<List<Customer>>> Search([FromQuery] string name)
         {
-            var results = list.Where(x => x.Name.Contains(name)).ToList();
+            var results = _customerService.SearchByName(name);
             if (!results.Any())
             {
                 return NotFound(new ApiResponse<List<Customer>>("No items found in system."));
@@ -48,99 +46,51 @@ namespace Papara_cohort.Controllers
         [HttpGet("ListByName")]
         public ActionResult<ApiResponse<List<Customer>>> List([FromQuery] string name = "")
         {
-            var filteredList = list;
-
-            if (!string.IsNullOrEmpty(name))
-            {
-                filteredList = list.Where(x => x.Name.ToLower().Contains(name.ToLower())).ToList();
-            }
-
+            var filteredList = _customerService.ListByName(name);
             return Ok(new ApiResponse<List<Customer>>(filteredList));
         }
-
 
         [HttpGet("Sort")]
         public ActionResult<ApiResponse<List<Customer>>> Sort([FromQuery] string sortBy, [FromQuery] bool descending = false)
         {
-            List<Customer> sortedList;
-            switch (sortBy?.ToLower())
-            {
-                case "name":
-                    sortedList = descending ? list.OrderByDescending(x => x.Name).ToList() : list.OrderBy(x => x.Name).ToList();
-                    break;
-                case "age":
-                    sortedList = descending ? list.OrderByDescending(x => x.Age).ToList() : list.OrderBy(x => x.Age).ToList();
-                    break;
-                default:
-                    sortedList = list;
-                    break;
-            }
+            var sortedList = _customerService.Sort(sortBy, descending);
             return Ok(new ApiResponse<List<Customer>>(sortedList));
         }
 
         [HttpPost]
         public ActionResult<ApiResponse<List<Customer>>> Post([FromBody] Customer value)
         {
-            list.Add(value);
-            return CreatedAtAction(nameof(Get), new { id = value.Id }, new ApiResponse<List<Customer>>(list));
+            _customerService.Add(value);
+            return CreatedAtAction(nameof(Get), new { id = value.Id }, new ApiResponse<List<Customer>>(_customerService.GetAll()));
         }
 
         [HttpPost("PostQuery")]
         public ActionResult<ApiResponse<List<Customer>>> Add([FromQuery] int id, [FromBody] Customer value)
         {
             value.Id = id;
-            list.Add(value);
-            return CreatedAtAction(nameof(Get), new { id = value.Id }, new ApiResponse<List<Customer>>(list));
+            _customerService.Add(value);
+            return CreatedAtAction(nameof(Get), new { id = value.Id }, new ApiResponse<List<Customer>>(_customerService.GetAll()));
         }
 
         [HttpPut("{id}")]
         public ActionResult<ApiResponse<List<Customer>>> Put(int id, [FromBody] Customer value)
         {
-            var item = list.FirstOrDefault(x => x.Id == id);
-            if (item is null)
-            {
-                return NotFound(new ApiResponse<List<Customer>>("Item not found in system."));
-            }
-
-            list.Remove(item);
-            list.Add(value);
-            return Ok(new ApiResponse<List<Customer>>(list));
+            _customerService.Update(id, value);
+            return Ok(new ApiResponse<List<Customer>>(_customerService.GetAll()));
         }
 
         [HttpDelete("{id}")]
         public ActionResult<ApiResponse<List<Customer>>> Delete(int id)
         {
-            var item = list.FirstOrDefault(x => x.Id == id);
-            if (item is null)
-            {
-                return NotFound(new ApiResponse<List<Customer>>("Item not found in system."));
-            }
-
-            list.Remove(item);
-            return Ok(new ApiResponse<List<Customer>>(list));
+            _customerService.Delete(id);
+            return Ok(new ApiResponse<List<Customer>>(_customerService.GetAll()));
         }
 
         [HttpPatch("{id}")]
         public ActionResult<ApiResponse<List<Customer>>> Patch(int id, [FromBody] CustomerUpdateModel updateModel)
         {
-            var item = list.FirstOrDefault(x => x.Id == id);
-            if (item is null)
-            {
-                return NotFound(new ApiResponse<List<Customer>>("Item not found in system."));
-            }
-
-            if (updateModel.Name != null)
-            {
-                item.Name = updateModel.Name;
-            }
-
-            if (updateModel.Age.HasValue)
-            {
-                item.Age = updateModel.Age.Value;
-            }
-
-            return Ok(new ApiResponse<List<Customer>>(list));
+            _customerService.Patch(id, updateModel);
+            return Ok(new ApiResponse<List<Customer>>(_customerService.GetAll()));
         }
-
     }
 }
