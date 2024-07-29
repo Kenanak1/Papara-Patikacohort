@@ -1,5 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
+using AutoMapper;
+using FluentValidation;
+using FluentValidation.Results;
+using System.Linq;
+using Papara_cohort.Models;
 
 namespace Papara_cohort.Controllers
 {
@@ -8,89 +13,153 @@ namespace Papara_cohort.Controllers
     public class CustomersController : ControllerBase
     {
         private readonly ICustomerService _customerService;
+        private readonly IMapper _mapper;
+        private readonly IValidator<CustomerUpdateDto> _updateValidator;
+        private readonly IValidator<int> _idValidator;
 
-        public CustomersController(ICustomerService customerService)
+        public CustomersController(ICustomerService customerService, IMapper mapper,
+                                   IValidator<CustomerUpdateDto> updateValidator,
+                                   IValidator<int> idValidator)
         {
             _customerService = customerService;
+            _mapper = mapper;
+            _updateValidator = updateValidator;
+            _idValidator = idValidator;
         }
 
         [HttpGet]
-        public ActionResult<ApiResponse<List<Customer>>> Get()
+        public ActionResult<ApiResponse<List<CustomerDto>>> Get()
         {
             var list = _customerService.GetAll();
-            return Ok(new ApiResponse<List<Customer>>(list));
+            var listDto = _mapper.Map<List<CustomerDto>>(list);
+            return Ok(new ApiResponse<List<CustomerDto>>(listDto));
         }
 
         [HttpGet("{id}")]
-        public ActionResult<ApiResponse<Customer>> Get(int id)
+        public ActionResult<ApiResponse<CustomerDto>> Get(int id)
         {
+            ValidationResult validationResult = _idValidator.Validate(id);
+            if (!validationResult.IsValid)
+            {
+                return BadRequest(new ApiResponse<CustomerDto>(validationResult.Errors.Select(e => e.ErrorMessage).ToList()));
+            }
+
             var item = _customerService.GetById(id);
             if (item is null)
             {
-                return NotFound(new ApiResponse<Customer>("Item not found in system."));
+                return NotFound(new ApiResponse<CustomerDto>(new List<string> { "Item not found in system." }));
             }
-            return Ok(new ApiResponse<Customer>(item));
+            var itemDto = _mapper.Map<CustomerDto>(item);
+            return Ok(new ApiResponse<CustomerDto>(itemDto));
         }
 
         [HttpGet("ByNameQuery")]
-        public ActionResult<ApiResponse<List<Customer>>> Search([FromQuery] string name)
+        public ActionResult<ApiResponse<List<CustomerDto>>> Search([FromQuery] string name)
         {
             var results = _customerService.SearchByName(name);
             if (!results.Any())
             {
-                return NotFound(new ApiResponse<List<Customer>>("No items found in system."));
+                return NotFound(new ApiResponse<List<CustomerDto>>(new List<string> { "No items found in system." }));
             }
-            return Ok(new ApiResponse<List<Customer>>(results));
+            var resultsDto = _mapper.Map<List<CustomerDto>>(results);
+            return Ok(new ApiResponse<List<CustomerDto>>(resultsDto));
         }
 
         [HttpGet("ListByName")]
-        public ActionResult<ApiResponse<List<Customer>>> List([FromQuery] string name = "")
+        public ActionResult<ApiResponse<List<CustomerDto>>> List([FromQuery] string name = "")
         {
             var filteredList = _customerService.ListByName(name);
-            return Ok(new ApiResponse<List<Customer>>(filteredList));
+            var filteredListDto = _mapper.Map<List<CustomerDto>>(filteredList);
+            return Ok(new ApiResponse<List<CustomerDto>>(filteredListDto));
         }
 
         [HttpGet("Sort")]
-        public ActionResult<ApiResponse<List<Customer>>> Sort([FromQuery] string sortBy, [FromQuery] bool descending = false)
+        public ActionResult<ApiResponse<List<CustomerDto>>> Sort([FromQuery] string sortBy, [FromQuery] bool descending = false)
         {
             var sortedList = _customerService.Sort(sortBy, descending);
-            return Ok(new ApiResponse<List<Customer>>(sortedList));
+            var sortedListDto = _mapper.Map<List<CustomerDto>>(sortedList);
+            return Ok(new ApiResponse<List<CustomerDto>>(sortedListDto));
         }
 
         [HttpPost]
-        public ActionResult<ApiResponse<List<Customer>>> Post([FromBody] Customer value)
+        public ActionResult<ApiResponse<List<CustomerDto>>> Post([FromBody] CustomerDto value)
         {
-            _customerService.Add(value);
-            return CreatedAtAction(nameof(Get), new { id = value.Id }, new ApiResponse<List<Customer>>(_customerService.GetAll()));
+            var customer = _mapper.Map<Customer>(value);
+            _customerService.Add(customer);
+            var list = _customerService.GetAll();
+            var listDto = _mapper.Map<List<CustomerDto>>(list);
+            return CreatedAtAction(nameof(Get), new { id = value.Id }, new ApiResponse<List<CustomerDto>>(listDto));
         }
 
         [HttpPost("PostQuery")]
-        public ActionResult<ApiResponse<List<Customer>>> Add([FromQuery] int id, [FromBody] Customer value)
+        public ActionResult<ApiResponse<List<CustomerDto>>> Add([FromQuery] int id, [FromBody] CustomerDto value)
         {
             value.Id = id;
-            _customerService.Add(value);
-            return CreatedAtAction(nameof(Get), new { id = value.Id }, new ApiResponse<List<Customer>>(_customerService.GetAll()));
+            var customer = _mapper.Map<Customer>(value);
+            _customerService.Add(customer);
+            var list = _customerService.GetAll();
+            var listDto = _mapper.Map<List<CustomerDto>>(list);
+            return CreatedAtAction(nameof(Get), new { id = value.Id }, new ApiResponse<List<CustomerDto>>(listDto));
         }
 
         [HttpPut("{id}")]
-        public ActionResult<ApiResponse<List<Customer>>> Put(int id, [FromBody] Customer value)
+        public ActionResult<ApiResponse<List<CustomerDto>>> Put(int id, [FromBody] CustomerUpdateDto value)
         {
-            _customerService.Update(id, value);
-            return Ok(new ApiResponse<List<Customer>>(_customerService.GetAll()));
+            ValidationResult idValidationResult = _idValidator.Validate(id);
+            if (!idValidationResult.IsValid)
+            {
+                return BadRequest(new ApiResponse<List<CustomerDto>>(idValidationResult.Errors.Select(e => e.ErrorMessage).ToList()));
+            }
+
+            ValidationResult updateValidationResult = _updateValidator.Validate(value);
+            if (!updateValidationResult.IsValid)
+            {
+                return BadRequest(new ApiResponse<List<CustomerDto>>(updateValidationResult.Errors.Select(e => e.ErrorMessage).ToList()));
+            }
+
+            var customerUpdateModel = _mapper.Map<CustomerUpdateModel>(value);
+            _customerService.Update(id, _mapper.Map<Customer>(customerUpdateModel));
+            var list = _customerService.GetAll();
+            var listDto = _mapper.Map<List<CustomerDto>>(list);
+            return Ok(new ApiResponse<List<CustomerDto>>(listDto));
         }
 
         [HttpDelete("{id}")]
-        public ActionResult<ApiResponse<List<Customer>>> Delete(int id)
+        public ActionResult<ApiResponse<List<CustomerDto>>> Delete(int id)
         {
+            ValidationResult validationResult = _idValidator.Validate(id);
+            if (!validationResult.IsValid)
+            {
+                return BadRequest(new ApiResponse<List<CustomerDto>>(validationResult.Errors.Select(e => e.ErrorMessage).ToList()));
+            }
+
             _customerService.Delete(id);
-            return Ok(new ApiResponse<List<Customer>>(_customerService.GetAll()));
+            var list = _customerService.GetAll();
+            var listDto = _mapper.Map<List<CustomerDto>>(list);
+            return Ok(new ApiResponse<List<CustomerDto>>(listDto));
         }
 
+
         [HttpPatch("{id}")]
-        public ActionResult<ApiResponse<List<Customer>>> Patch(int id, [FromBody] CustomerUpdateModel updateModel)
+        public ActionResult<ApiResponse<List<CustomerDto>>> Patch(int id, [FromBody] CustomerUpdateDto updateModel)
         {
-            _customerService.Patch(id, updateModel);
-            return Ok(new ApiResponse<List<Customer>>(_customerService.GetAll()));
+            ValidationResult idValidationResult = _idValidator.Validate(id);
+            if (!idValidationResult.IsValid)
+            {
+                return BadRequest(new ApiResponse<List<CustomerDto>>(idValidationResult.Errors.Select(e => e.ErrorMessage).ToList()));
+            }
+
+            ValidationResult updateValidationResult = _updateValidator.Validate(updateModel);
+            if (!updateValidationResult.IsValid)
+            {
+                return BadRequest(new ApiResponse<List<CustomerDto>>(updateValidationResult.Errors.Select(e => e.ErrorMessage).ToList()));
+            }
+
+            var customerUpdateModel = _mapper.Map<CustomerUpdateModel>(updateModel);
+            _customerService.Patch(id, customerUpdateModel);
+            var list = _customerService.GetAll();
+            var listDto = _mapper.Map<List<CustomerDto>>(list);
+            return Ok(new ApiResponse<List<CustomerDto>>(listDto));
         }
     }
 }

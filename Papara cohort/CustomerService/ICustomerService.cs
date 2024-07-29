@@ -1,4 +1,5 @@
 ﻿using Papara_cohort;
+using System.Collections.Generic;
 
 public interface ICustomerService
 {
