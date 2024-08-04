@@ -1,36 +1,26 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel;
 using Papara_cohort.Controllers;
+using Papara_cohort.Base;
 
 namespace Papara_cohort;
 
-    public class Customer
-    {
-        [Required]
-        [Range(minimum: 1, maximum: 10000)]
-        [DisplayName("Customer id")]
-        public int Id { get; set; }
+    public class Customer : BaseEntity
+{
 
-
-        [Required]
-        [StringLength(maximumLength: 50, MinimumLength = 2)]
-        [DisplayName("Customer name")]
-        public string Name { get; set; }
-
-
-        [Required]
-        [Range(minimum: 18, maximum: 150)]
-        [DisplayName("Customer Age")]
-        public int Age { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public DateTime DateOfBirth { get; set; }
 
     }
     public class CustomerUpdateModel
     {
         [StringLength(maximumLength: 50, MinimumLength = 2)]
         [DisplayName("Customer name")]
-        public string Name { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
 
-        [Range(minimum: 18, maximum: 150)]
+    [Range(minimum: 18, maximum: 150)]
         [DisplayName("Customer Age")]
         public int? Age { get; set; }
     }

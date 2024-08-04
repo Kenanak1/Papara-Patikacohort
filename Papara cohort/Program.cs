@@ -7,7 +7,9 @@ using System;
 using Papara_cohort.Authentication;
 using AutoMapper;
 using FluentValidation;
-using Papara_cohort.Models;
+using FluentValidation.AspNetCore;
+using Papara_cohort.Model;
+
 
 namespace Papara_cohort
 {
@@ -17,13 +19,19 @@ namespace Papara_cohort
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
-            builder.Services.AddControllers();
+
+            builder.Services.AddControllers()
+                .AddFluentValidation(fv => fv.RegisterValidatorsFromAssemblyContaining<Program>());
             builder.Services.AddLogging();
 
             // Dependency Injection
             builder.Services.AddScoped<IAuthService, UserAuthService>();
             builder.Services.AddScoped<ICustomerService, CustomerService>();
+
+            // FluentValidation için baðýmlýlýk ekleme
+            builder.Services.AddTransient<IValidator<Author>, AuthorValidator>();
+            builder.Services.AddTransient<IValidator<Book>, BookValidator>();
+            builder.Services.AddTransient<IValidator<Genre>, GenreValidator>();
 
             // Authentication middleware
             builder.Services.AddAuthentication(options =>
@@ -31,7 +39,7 @@ namespace Papara_cohort
                 options.DefaultAuthenticateScheme = "BasicAuthentication";
                 options.DefaultChallengeScheme = "BasicAuthentication";
             })
-           .AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>("BasicAuthentication", options => { });
+            .AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>("BasicAuthentication", options => { });
 
             // Authorization policy
             builder.Services.AddAuthorization(options =>
@@ -71,10 +79,6 @@ namespace Papara_cohort
 
             // Automapper configuration
             builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
-
-            // FluentValidation configuration
-            builder.Services.AddTransient<IValidator<CustomerUpdateDto>, CustomerUpdateDtoValidator>();
-            builder.Services.AddTransient<IValidator<int>, IdValidator>();
 
             var app = builder.Build();
 
