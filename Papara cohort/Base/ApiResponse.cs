@@ -1,18 +1,42 @@
-﻿public class ApiResponse<T>
+﻿namespace Papara_cohort.Base.Response
 {
-    public T Data { get; set; }
-    public List<string> Errors { get; set; }
-    public bool Success { get; set; }
-
-    public ApiResponse(T data)
+    public class ApiResponse<T>
     {
-        Data = data;
-        Success = true;
+        public bool Success { get; set; }
+        public T Data { get; set; }
+        public string Message { get; set; }
+
+        public ApiResponse()
+        {
+            Success = true;
+        }
+
+        public ApiResponse(T data) : this()
+        {
+            Data = data;
+        }
+
+        public ApiResponse(string message)
+        {
+            Success = false;
+            Message = message;
+        }
     }
 
-    public ApiResponse(List<string> errors)
+    public class ApiResponse
     {
-        Errors = errors;
-        Success = false;
+        public bool Success { get; set; }
+        public string Message { get; set; }
+
+        public ApiResponse()
+        {
+            Success = true;
+        }
+
+        public ApiResponse(string message)
+        {
+            Success = false;
+            Message = message;
+        }
     }
 }

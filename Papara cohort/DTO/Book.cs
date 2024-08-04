@@ -5,7 +5,7 @@ namespace Papara_cohort.DTO;
 
 public class BookResponse : BaseEntity
 {
-    public string Title { get; set; }
+    public string BookTitle { get; set; }
     public int PageCount { get; set; }
     public DateTime PublishedDate { get; set; }
     public virtual string AuthorName { get; set; }
@@ -16,7 +16,7 @@ public class BookResponse : BaseEntity
 }
 public class BookRequest : BaseEntity
 {
-    public string Title { get; set; }
+    public string BookTitle { get; set; }
     public int PageCount { get; set; }
     public DateTime PublishedDate { get; set; }
 }
